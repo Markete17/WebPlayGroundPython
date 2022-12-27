@@ -1,0 +1,46 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Páginas{% endblock %}
+{% block content %}
+<main role="main">
+  <div class="container mb-4">
+    {% for page in page_obj %}
+      <div class="row mt-3">
+        <div class="col-md-9 mx-auto">
+          <h2 class="mb-4">{{page.title}}</h2>
+          <div>
+            <p>{{page.content|striptags|safe|truncatechars:"200"}}</p>
+            <p><a href="{% url 'page' page.pk page.title|slugify %}">Leer más</a>
+              <!--
+              {% if request.user.is_staff %}
+                | <a href="#">Editar</a>
+                | <a href="#">Borrar</a>
+              {% endif %}
+              -->
+            </p>
+          </div>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  <div class="d-flex justify-content-center">
+    <span class="step-links">
+        {% if page_obj.has_previous %}
+            <a href="?page=1">&laquo; first</a>
+            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
+        {% endif %}
+
+        {% if page_obj.has_next %}
+            <a href="?page={{ page_obj.next_page_number }}">next</a>
+            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
+        {% endif %}
+    </span>
+</div>
+<br>
+<div class="d-flex justify-content-center">
+<span class="current">
+  Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+</span>
+</div>
+</main>
+{% endblock %}
