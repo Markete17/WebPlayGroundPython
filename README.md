@@ -24,14 +24,14 @@ Para este caso, el objeto que mejor se adapta al ejemplo es el <b>TemplateView</
 
 De esta manera. Dentro de la clase se tiene que añadir la propiedad <b>template_name</b> y definir el método <b>get_context_data</b>
 
-```python:
+```python
 def home(request):
     return render(request, "core/home.html", {"title": 'Mi web'})
 ```
 
 sería:
 
-```python:
+```python
 class HomePageView(TemplateView):
     template_name = "core/home.html"
     
@@ -45,7 +45,7 @@ class HomePageView(TemplateView):
 y en las urls.py se llama a la clase con el método as_view()
 
 
-```python:
+```python
 from django.urls import path
 from .views import SampleView, HomePageView
 from . import views
@@ -59,7 +59,7 @@ urlpatterns = [
 También se puede hacer de esta forma y es parecido a lo que se hacía con las funciones y es definir el método <b>def get(self, request, *args, **kwargs)</b>
 
 
-```python:
+```python
 class HomePageView(TemplateView):
     template_name = "core/home.html"
     
@@ -985,5 +985,3 @@ else:
 		¿Ha olvidado su contraseña? Puede restaurarla <a href="{% url 'password_reset' %}">Aquí</a>
 	</p>
 ```
-=======
->>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
