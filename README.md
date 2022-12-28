@@ -13,6 +13,7 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 8. [Formulario para los CBV (los View)](#id8)
 9. [Proteger las url (Utilización de Mixin)](#id9)
 10. [Decoradores de identificación](#id10)
+11. [Autenticación con Django](#id11)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
