@@ -28,15 +28,32 @@
                 <a class="nav-link" href="{% url 'home' %}">Inicio</a>
               </li>
               <li class="nav-item">
-                <a class="nav-link" href="{% url 'pages' %}">Páginas</a>
+                <a class="nav-link" href="{% url 'pages:pages' %}">Páginas</a>
               </li>
             </ul>
             <ul class="navbar-nav">
+
+              {% if not request.user.is_authenticated %}
               <li class="nav-item">
-                <a class="nav-link" href="/admin/">
-                  {% if request.user.is_staff %}Admin{% else %}Acceder{% endif %}
+                <a class="nav-link" href="{% url 'login' %}">
+                  Login
                 </a>
               </li>
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'signup' %}">
+                  Signup
+                </a>
+              </li>
+              {% else %}
+              
+              <li class="nav-item">
+                <a class="nav-link" href="{% url 'logout' %}">
+                  Logout
+                </a>
+              </li>
+
+              {% endif %}
+
             </ul>
           </div>
         </div>

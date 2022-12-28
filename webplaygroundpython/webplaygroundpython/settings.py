@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'registration.apps.RegistrationConfig',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -130,3 +131,17 @@ CKEDITOR_CONFIGS = {
         'toolbar': 'Basic'
     }
 }
+
+# AUTHENTICATION settings
+LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+
+import os
+# EMAILS
+if DEBUG:
+    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
+else:
+    # Aquí hay que configurar un email real para producción
+    EMAIL_BACKEND = ''
+    EMAIL_FILE_PATH = ''
