@@ -593,7 +593,6 @@ Además de este, hay más decoradores de identificación como:
 - [@login_required](https://docs.djangoproject.com/en/4.0/topics/auth/default/#the-login-required-decorator)
 - [@permission_required](https://docs.djangoproject.com/en/4.0/topics/auth/default/#the-permission-required-decorator)
 - [@staff_member_required](https://docs.djangoproject.com/en/2.0/_modules/django/contrib/admin/views/decorators/)
-- [Información Documentación](https://docs.djangoproject.com/en/4.0/topics/class-based-views/mixins/)
 
 ---------------------------------------
 
