@@ -24,12 +24,19 @@ Para este caso, el objeto que mejor se adapta al ejemplo es el <b>TemplateView</
 
 De esta manera. Dentro de la clase se tiene que añadir la propiedad <b>template_name</b> y definir el método <b>get_context_data</b>
 
+<<<<<<< HEAD
 ```python
+=======
+
+```python:
+>>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
 def home(request):
     return render(request, "core/home.html", {"title": 'Mi web'})
-</code></pre>
-seria:
-<pre><code>
+```
+
+sería:
+
+```python:
 class HomePageView(TemplateView):
     template_name = "core/home.html"
     
@@ -42,7 +49,11 @@ class HomePageView(TemplateView):
 
 y en las urls.py se llama a la clase con el método as_view()
 
+<<<<<<< HEAD
 ```python
+=======
+```python:
+>>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
 from django.urls import path
 from .views import SampleView, HomePageView
 from . import views
@@ -55,15 +66,22 @@ urlpatterns = [
 
 También se puede hacer de esta forma y es parecido a lo que se hacía con las funciones y es definir el método <b>def get(self, request, *args, **kwargs)</b>
 
+<<<<<<< HEAD
 ```python
+=======
+```python:
+>>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
 class HomePageView(TemplateView):
     template_name = "core/home.html"
     
     def get(self, request, *args, **kwargs):
         return render(request, self.template_name, {"title": 'Mi web'})
 ```
+<<<<<<< HEAD
 
 ---------------------------------------
+=======
+>>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
 
 ## ListView y Paginación <a name="id2"></a>
 
@@ -113,7 +131,6 @@ class PageListView(ListView):
     model = Page
     paginate_by = 10
     template_name = "pages/pages.html"
-</code></pre>
 ```
 
 Ahora en la vista se puede utilizar la paginación utilizando {{page_obj}} y algunos atributos que tiene este objeto como por ejemplo:
@@ -167,7 +184,6 @@ Un ejemplo es:
     </span>
 </div>
 </main>
-</code></pre>
 ```
 
 ---------------------------------------
@@ -183,6 +199,7 @@ class PageDetailView(DetailView):
     model = Page
     template_name = "pages/page.html"
 ```
+<<<<<<< HEAD
 
 El template_name se puede personalizar pero si no se pone nada por defecto estará en pages/page_detail.html
 Luego en la template se puede usar el nombre del objeto, en este caso, {{page.propiedad}}
@@ -983,3 +1000,5 @@ else:
 		¿Ha olvidado su contraseña? Puede restaurarla <a href="{% url 'password_reset' %}">Aquí</a>
 	</p>
 ```
+=======
+>>>>>>> 9cf89c340edf511af1d224d9828d52d11acbf4d3
