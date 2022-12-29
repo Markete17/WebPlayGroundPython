@@ -40,7 +40,9 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'core.apps.CoreConfig',
     'pages.apps.PagesConfig',
-    'ckeditor'
+    'ckeditor',
+    'profiles.apps.ProfilesConfig',
+    'messenger.apps.MessengerConfig'
 ]
 
 MIDDLEWARE = [
@@ -133,7 +135,7 @@ CKEDITOR_CONFIGS = {
 }
 
 # AUTHENTICATION settings
-LOGIN_REDIRECT_URL = 'home'
+# LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
 import os
@@ -145,3 +147,7 @@ else:
     # Aquí hay que configurar un email real para producción
     EMAIL_BACKEND = ''
     EMAIL_FILE_PATH = ''
+
+## MEDIA SETTINGS
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")

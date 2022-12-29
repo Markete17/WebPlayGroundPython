@@ -14,6 +14,10 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 9. [Proteger las url (Utilización de Mixin)](#id9)
 10. [Decoradores de identificación](#id10)
 11. [Autenticación con Django](#id11)
+12. [Perfil de usuario, relaciones entre modelos Django e imágenes en modelos, UpdateView sin indicar la PK](#id12)
+13. [Señales](#id13)
+14. [Pruebas unitarias Django](#id14)
+15. [App de mensajería con TDD](#id15)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -116,9 +120,35 @@ Para hacer la paginación de este modelo, es necesario que la clase ListView ten
 ```python
 class PageListView(ListView):
     model = Page
-    paginate_by = 10
-    template_name = "pages/pages.html"
+    paginate_by = 3
+    # template_name = "pages/pages.html" no hace falta, detecta que es page_list
+    
+    # Paginación: https://stackoverflow.com/questions/39088813/django-paginator-with-many-pages
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+        if not context.get('is_paginated', False):
+            return context
+
+        paginator = context.get('paginator')
+        num_pages = paginator.num_pages
+        current_page = context.get('page_obj')
+        page_no = current_page.number
+
+        if num_pages <= 11 or page_no <= 6:  # case 1 and 2
+            pages = [x for x in range(1, min(num_pages + 1, 12))]
+        elif page_no > num_pages - 6:  # case 4
+            pages = [x for x in range(num_pages - 10, num_pages + 1)]
+        else:  # case 3
+            pages = [x for x in range(page_no - 5, page_no + 6)]
+
+        context.update({'pages': pages})
+        return context
 ```
+
+En StackOverflow explica el algoritmo para hacer responsive la paginación y siempre mostrar 11 páginas.
+
+[Paginación Responsive](https://stackoverflow.com/questions/39088813/django-paginator-with-many-pages)
+
 
 Ahora en la vista se puede utilizar la paginación utilizando {{page_obj}} y algunos atributos que tiene este objeto como por ejemplo:
 
@@ -132,45 +162,70 @@ Ahora en la vista se puede utilizar la paginación utilizando {{page_obj}} y alg
 Un ejemplo es: 
 
 ```html
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Páginas{% endblock %}
+
+{% block content %}
+{% include "pages/includes/pages_menu.html" %}
 <main role="main">
   <div class="container mb-4">
-    {% for page in page_obj %}
+    {% for page in page_list|dictsort:'id' reversed %}
       <div class="row mt-3">
         <div class="col-md-9 mx-auto">
           <h2 class="mb-4">{{page.title}}</h2>
           <div>
             <p>{{page.content|striptags|safe|truncatechars:"200"}}</p>
-            <p><a href="{% url 'page' page.id page.title|slugify %}">Leer más</a>
-              <!--
+            <p><a href="{% url 'pages:page' page.pk page.title|slugify %}">Leer más</a>
               {% if request.user.is_staff %}
-                | <a href="#">Editar</a>
-                | <a href="#">Borrar</a>
+                | <a href="{% url 'pages:update' page.id %}">Editar</a>
+                | <a href="{% url 'pages:delete' page.id %}">Borrar</a>
               {% endif %}
-              -->
             </p>
           </div>
         </div>
       </div>
     {% endfor %}
+
+    <!-- Menú de paginación -->
+{% if is_paginated %}
+<nav aria-label="Page navigation">
+  <ul class="pagination justify-content-center">
+    {% if page_obj.has_previous %}
+      <li class="page-item ">
+        <a class="page-link" href="?page={{ page_obj.previous_page_number }}">&laquo;</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <a class="page-link" href="#" tabindex="-1">&laquo;</a>
+      </li>
+    {% endif %}
+    {% for i in pages %}
+      <li class="page-item {% if page_obj.number == i %}active{% endif %}">
+        <a class="page-link" href="?page={{ i }}">{{ i }}</a>
+      </li>
+    {% endfor %}
+    {% if page_obj.has_next %}
+      <li class="page-item ">
+        <a class="page-link" href="?page={{ page_obj.next_page_number }}">&raquo;</a>
+      </li>
+    {% else %}
+      <li class="page-item disabled">
+        <a class="page-link" href="#" tabindex="-1">&raquo;</a>
+      </li>
+    {% endif %}
+  </ul>
+</nav>
+{% endif %}
+<div class="d-flex justify-content-center">
+  <span class="current">
+    Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
+  </span>
   </div>
-  <div class="d-flex justify-content-center">
-    <span class="step-links">
-        {% if page_obj.has_previous %}
-            <a href="?page=1">&laquo; first</a>
-            <a href="?page={{ page_obj.previous_page_number }}">previous</a>
-        {% endif %}
-
-        <span class="current">
-            Page {{ page_obj.number }} of {{ page_obj.paginator.num_pages }}.
-        </span>
-
-        {% if page_obj.has_next %}
-            <a href="?page={{ page_obj.next_page_number }}">next</a>
-            <a href="?page={{ page_obj.paginator.num_pages }}">last &raquo;</a>
-        {% endif %}
-    </span>
-</div>
+  </div>
 </main>
+{% endblock %}
+
 ```
 
 ---------------------------------------
@@ -567,6 +622,7 @@ class PageCreateView(StaffRequiredMixin, CreateView):
 [Documentación decorar CBV](https://docs.djangoproject.com/en/4.0/topics/class-based-views/intro/#decorating-class-based-views)
 
 Se puede hacer con Mixin pero Django incluye ya decoradores de identificación que nos ahorra comprobar si un usuario es un staff.
+Por lo tanto, aquí se ahorarrían dos líneas de código.
 
 ```python
 from django.utils.decorators import method_decorator
@@ -984,4 +1040,471 @@ else:
 	<p>
 		¿Ha olvidado su contraseña? Puede restaurarla <a href="{% url 'password_reset' %}">Aquí</a>
 	</p>
+```
+
+---------------------------------------
+
+## Perfil de usuario, relaciones entre modelos Django e imágenes en modelos, UpdateView sin indicar la PK<a name="id12"></a>
+
+**Índice**   
+1. [Modelo Profile con relación 1:1 User](#id12-1)
+2. [Tener instalado Pillow para manejar imágenes](#id12-2)
+3. [Configurar settings.py para crear las carpetas con los archivos media](#id12-3)
+4. [Crear la vista para el formulario del perfil de usuario](#id12-4)
+5. [Crear la template con el formulario profile_form.html y que acepte ficheros media](#id12-5)
+6. [Actualizar la URL y el redirect de login en settings](#id12-6)
+7. [No hace falta related_name en relaciones OneToOne](#id12-7)
+8. [Mejorar aspecto del formulario del perfil de usuario](#id12-8)
+9. [Incluir opción para editar email](#id12-9)
+10. [Formulario para cambiar la contraseña](#id12-10)
+
+### 1. Modelo Profile con relación 1:1 User<a name="id12-1"></a>
+
+Ofrecer al usuario tres campos para el usuario: imagen avatar, un texto como biografía y un enlace a su página web.
+
+Las relaciones entre modelos que existen con Django son:
+- <b>models.OneToOneField: </b> (1:1) -> 1 usuario - 1 perfil
+- <b>models.ForeignKeyField: </b> (1:N) -> 1 usuario - N perfiles
+- <b>models.ManyToManyField: </b> (N:N) -> N usuarios - N perfiles
+
+
+
+```python
+def custom_upload_to(instance, filename):
+    old_instance = Profile.objects.get(pk=instance.pk)
+    old_instance.avatar.delete()
+    return 'profiles/'+filename
+
+
+class Profile(models.Model):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to=custom_upload_to, null=True, blank=True)
+    bio = models.TextField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=200)
+
+    class Meta:
+        verbose_name = ("Perfil")
+        verbose_name_plural = ("Perfiles")
+        ordering = ['user__username']
+
+    def __str__(self):
+        return self.user.username
+```
+Para que la carpeta media se encuentre ordenada, es necesario crear una carpeta para cada modelo. Para que se cree de forma automática cuando
+se cree una instancia del modelo, es necesario modificar el campo imagen del modelo con el atributo <b>upload_to='carpeta'</b> indicando el nombre
+de la carpeta para este modelo.
+
+<b>Pero con el atributo upload_to asignandole solo la carpeta, el problema que se tiene es que cuando el usuario cambia el avatar, se almacena el nuevo y el antiguo. Para que se elimine el viejo y
+quedarse con el más reciente, se necesita escribir una nueva función para asignársela al upload_to</b>
+
+[Documentación Upload_to](https://docs.djangoproject.com/en/4.0/ref/models/fields/#django.db.models.FileField.upload_to)
+
+
+```python
+def custom_upload_to(instance, filename):
+    old_instance = Profile.objects.get(pk=instance.pk)
+    old_instance.avatar.delete()
+    return 'profiles/'+filename
+
+...
+
+avatar = models.ImageField(upload_to=custom_upload_to, null=True, blank=True)
+```
+
+### 2. Tener instalado Pillow para manejar imágenes<a name="id12-2"></a>
+
+Cabe destacar que es necesario tener instalado Pillow en el entorno virtual para usar ImageField y servir archivos media.
+Para ello, pipenv shell para activar el entorno virtual y una vez dentro, ejecutar <b>pip install Pilow </b>
+
+### 3. Configurar settings.py para crear las carpetas con los archivos media<a name="id12-3"></a>
+
+
+Django por defecto no maneja el contenido multimedia y cuando se añade una imagen en un registro en el panel de administración, también se añade en el
+directorio raíz.
+
+Para esto, hay que crear en el directorio raíz una carpeta llamada <b>media</b> para almacenar ahí las imágenes.
+Para cambiar la ubicación por defecto, ir al <b>settings.py</b> y añadir estas línes al final que lo que hace es establecer la ruta
+para guardar las imágenes.
+
+```python
+# Media files
+MEDIA_URL = '/media/'
+MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+```
+
+Para ver los ficheros media dentro de desarrollo:
+
+Modificar el archivo urls.py. Primero se comprueba si está en modo DEBUG. Si es así, se importa static que permite servir ficheros estáticos.
+Despues a urlPatters se concatena con la función static() junto con los enlaces de las variables creadas anteriormente: MEDIA_URL y MEDIA_ROOT
+
+```python
+urlpatterns = [
+    path('',views.home,name="home"),
+    path('about-me/',views.about,name="about"),
+    path('portfolio/',views.portfolio,name="portfolio"),
+    path('contact/',views.contact,name='contact'),
+    path('admin/', admin.site.urls),
+]
+
+
+if settings.DEBUG:
+    from django.conf.urls.static import static #static que permite servir ficheros estáticos
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+```
+
+### 4. Crear la vista para el formulario del perfil de usuario<a name="id12-4"></a>
+
+```python
+from django.views.generic.edit import UpdateView
+from django.utils.decorators import method_decorator
+from django.contrib.auth.decorators import login_required
+from .models import Profile
+
+@method_decorator(login_required, name='dispatch')
+class ProfileUpdateView(UpdateView):
+    model = Profile
+    fields = ['avatar', 'bio', 'link']
+    success_url = reverse_lazy('profile')
+    template_name = 'registration/profile_form.html'
+
+    def get_object(self):
+        profile, created = Profile.objects.get_or_create(user=self.request.user)
+        return profile
+```
+<b>Al crear una UpdateView Django por defecto pide que en la URL haya una primary key o id. Pero esto no siempre es seguro mostrarlo. Por lo tanto,
+hay otra alternativa y es redefinir el método get_object que lo que va a hacer es recuperar el perfil a través de la request con el objeto user y de esta
+forma se podrá devolver el perfil a la template sin necesidad de incluir la id en la url</b>
+
+
+Destacar que esta vista solo estará disponible para aquellos usuarios autenticados. Esto se marca con el decorador @method_decorator(login_required, name='dispatch')
+
+### 5. Crear la template con el formulario profile_form.html  <a name="id12-5"></a>
+
+<b>Para aceptar imágenes en el formulario, es necesario escribir: enctype="multipart/form-data"</b>
+
+```html
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Perfil{% endblock %}
+{% block content %}
+<style>
+    .errorlist{
+        color:red;
+    } 
+    label{
+        display:none
+    }<
+</style>
+<main role="main">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col-md-9 mx-auto mb-5">
+        <form action="" method="post" enctype="multipart/form-data">{% csrf_token %}
+          <div class="row">
+            <!-- Previa del avatar -->
+            <div class="col-md-2">
+              {% if request.user.profile.avatar %}
+                <img src="{{request.user.profile.avatar.url}}" class="img-fluid">
+                <p class="mt-1">¿Borrar? <input type="checkbox" id="avatar-clear" name="avatar-clear" /></p>
+                {% else %}
+                <img src="{% static 'registration/img/no-avatar.jpg' %}" class="img-fluid">
+                {% endif %}
+            </div>
+            <!-- Formulario -->
+            <div class="col-md-10">
+              <h3>Perfil</h3>
+              <input type="file" name="avatar" class="form-control-file mt-3" id="id_avatar">
+              {{ form.bio }}
+              {{ form.link }}
+              <input type="submit" class="btn btn-primary btn-block mt-3" value="Actualizar">
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+```
+
+### 6. Actualizar la URL y el redirect de login en settings <a name="id12-6"></a>
+
+```python
+urlpatterns = [
+    path('signup/', SignUpCreateView.as_view(), name='signup'),
+    path('profile/', ProfileUpdateView.as_view(), name='profile')
+]
+```
+
+Ahora una vez el usuario inicie sesión hace falta que lo redirecione a esta página. Esto se tiene que comentar en SETTINGS:
+
+```python
+# AUTHENTICATION settings
+#comentar LOGIN_REDIRECT_URL = 'home'
+LOGOUT_REDIRECT_URL = 'home'
+```
+
+### 7. No hace falta related_name en relaciones OneToOne <a name="id12-7"></a>
+
+En relaciones OneToOne, no es necesario tener un related_name para referirse al objeto a la inversa. Ya viene implícito, por lo tanto,
+en el ejemplo, se tiene una relación en que 1 Perfil tiene 1 Usuario. 
+En la vista se podría hacer esto para acceder a los campos del profile
+
+```python
+{{request.user.profile.link}}
+```
+
+### 8. Mejorar aspecto del formulario del perfil de usuario <a name="id12-8"></a>
+
+Para ello hay que crear un ModelForm para poner con bootstrap los campos.
+
+```python
+class ProfileForm(forms.ModelForm):
+    
+    class Meta:
+        model = Profile
+        fields = ('avatar', 'bio', 'link')
+        widgets = {
+            'avatar': forms.ClearableFileInput(attrs={'class': 'form-control-file mt-3'}),
+            'bio': forms.Textarea(attrs={'class': 'form-control mt-3', 'rows': 1, 'placeholder': 'Biografía'}),
+            'link': forms.URLInput(attrs={'class': 'form-control mt-3', 'placeholder': 'Enlace'})
+        }
+```
+
+Cabe destacar que hay que indicarlo en la vista y se tiene que eliminar los campos fields ya que son indicados en el formulario:
+
+```python
+@method_decorator(login_required, name='dispatch')
+class ProfileUpdateView(UpdateView):
+    model = Profile
+    form_class = ProfileForm
+    success_url = reverse_lazy('profile')
+
+    def get_object(self):
+        profile, created = Profile.objects.get_or_create(user=self.request.user)
+        return profile
+```
+
+### 9. Incluir opción para editar email <a name="id12-9"></a>
+
+Al tener una UpdateView, solo modifica el modelo seleccionado por lo tanto, con la UpdateView no se va a poder modificar el email ni la contraseña.
+Para ello, sí que se puede crear un enlace para acceder a un formulario para modificar estos dos campos.
+Así que primero agregar un botón en el formulario
+
+```html
+            <!-- Formulario -->
+			<form>
+				.....
+              <p class="mt-3">Si desea editar su email haga clic <a href="{% url 'profile_email' %}""></a></p>
+              <input type="submit" class="btn btn-primary btn-block mt-3" value="Actualizar">
+			 ....
+			 </form>
+```
+Después en forms.py hay que crear un nuevo formulario para el modelo usuario para modificar el email
+
+```python
+class EmailForm(forms.ModelForm):
+    
+    email = forms.EmailField(required=True, help_text='Requerido, 254 carácteres como máximo y debe ser válido.')
+
+    class Meta:
+        model = User
+        fields = ['email']
+    
+    def clean_email(self):
+        
+        # Con esto se recupera el email que ha puesto el usuario antes de que se procese el formulario
+        email = self.cleaned_data.get("email")
+
+        if 'email' in self.changed_data: #para comprobar que el campo email del formulario ha cambiado
+            if User.objects.filter(email=email).exists():
+                raise forms.ValidationError('El email ya está registrado, prueba con otro')
+        return email
+```
+
+### 10. Formulario para cambiar la contraseña<a name="id12-10"></a>
+
+Cambio de la contraseña a partir de un formulario.
+Primero, se pone un botón al igual que con el email. 
+```html
+            <!-- Formulario -->
+			<form>
+				.....
+              <p class="mt-3">Si desea editar su email haga clic <a href="{% url 'profile_email' %}""></a></p>
+			  <p class="mt-3">Si quieres cambiar tu contraseña, haz clic <a href="{% url 'password_change' %}">Aquí</a></p>
+              <input type="submit" class="btn btn-primary btn-block mt-3" value="Actualizar">
+			 ....
+			 </form>
+```
+
+Tendrá la ruta <b>password_change</b> que viene por defecto cuando definimos el url_patterns global.
+
+Ahora solo hace falta crear las dos templates que pide esta URL por defecto que se llaman: 
+
+- <b>password_change_form.html</b>
+```html
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Cambio de contraseña{% endblock %}
+{% block content %}
+<style>.errorlist{color:red;}</style>
+<main role="main">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col-md-9 mx-auto mb-5">
+        <form action="" method="post">{% csrf_token %}
+            <h3 class="mb-4">Cambio de contraseña</h3>
+            <p>Por favor, introduzca su contraseña antigua por seguridad, y después introduzca dos veces la nueva contraseña para verificar que la ha escrito correctamente.</p>
+            {{form.old_password.errors}}
+            <p><input type="password" name="old_password" autofocus="" required="" id="id_old_password"class="form-control" placeholder="Contraseña antigua"></p>
+            {{form.new_password1.errors}}
+            <p><input type="password" name="new_password1" required="" id="id_new_password1" class="form-control" placeholder="Contraseña nueva"></p>
+            {{form.new_password2.errors}}
+            <p><input type="password" name="new_password2" required="" id="id_new_password2" class="form-control" placeholder="Contraseña nueva (confirmación)"></p>
+            <p><input type="submit" class="btn btn-primary btn-block" value="Cambiar mi contraseña"></p>
+        </form>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+```
+- <b>password_change_done.html</b>
+```html
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Contraseña cambiada correctamente{% endblock %}
+{% block content %}
+<main role="main">
+  <div class="container">
+    <div class="row mt-3">
+      <div class="col-md-9 mx-auto mb-5">
+        <h3 class="mb-4">Contraseña cambiada correctamente</h3>
+        <p>Puedes volver a tu perfil haciendo clic <a href="{% url 'profile' %}">aquí</a>.</p>
+      </div>
+    </div>
+  </div>
+</main>
+{% endblock %}
+```
+
+---------------------------------------
+
+## Señales <a name="id13"></a>
+
+[Información Signals](https://docs.djangoproject.com/en/4.0/topics/signals/)
+
+
+Una señal es un disparador que se llama automáticamente después de un evento que ocurre un ORM.
+
+Pueden ocurrir errores en el que cuando se registra un usuario no siempre rellena su perfil.
+Por lo tanto, con las señales cada vez que un usuario se registra va a tener que editar su perfil.
+
+Entonces es necesario ir al modelo y crear una nueva función (fuera del modelo) con el decorador <b>receiver</b> y dentro post_save,es decir, 
+que se ejecute después de guardar el modelo. Y el modelo se indica con el <b>sender=[Modelo]</b>.
+Con los kwargs se puede comprobar si es la primera vez que se crea la instancia del modelo, ideal para hacer una comprobación y si es la primera vez, crear
+el perfil con los datos del usuario:
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+from django.dispatch import receiver
+from django.db.models.signals import post_save
+
+# Create your models here.
+class Profile(models.Model):
+
+    user = models.OneToOneField(User, on_delete=models.CASCADE)
+    avatar = models.ImageField(upload_to='profiles', null=True, blank=True)
+    bio = models.TextField(blank=True, null=True)
+    link = models.URLField(blank=True, null=True, max_length=200)
+
+    class Meta:
+        verbose_name = ("Perfil")
+        verbose_name_plural = ("Perfiles")
+
+    def __str__(self):
+        return self.user.username
+
+@receiver(post_save, sender=User)
+def ensure_profile_exists(sender, instance, **kwargs):
+    ## Comprobar que solo sea de creación y es la primera vez que se guarda esta intancia
+    if kwargs.get('created', False):
+        Profile.objects.get_or_create(user=instance)
+        print('Se acaba de crear un usuario y su perfil enlazado')
+```
+
+---------------------------------------
+
+## Pruebas unitarias Django <a name="id14"></a>
+
+[Información Pruebas Unitarias](https://docs.djangoproject.com/en/4.0/topics/testing/overview/)
+
+Se va a hacer una prueba unitaria con Django para comprobar el ejemplo anterior de las señales: <a name="id14">Señales</a>
+
+Para crear una prueba unitaria con Django, es necesario ir a <b>test.py</b> de la aplicación y escribir dentro la prueba.
+Primero crear una clase que contendrá todas las pruebas y heredará de TestCase.
+En el método setUp se incluyen las primeras acciones antes de ejecutar los test.
+Y al definir la prueba unitaria se debe de poner delante test_[nombre]
+
+```python
+from django.test import TestCase
+from .models import Profile
+from django.contrib.auth.models import User
+
+# Create your tests here.
+class ProfileTest(TestCase):
+    def setUp(self):
+        User.objects.create_user('test','test@test.com', 'test1234')
+
+    def test_profile_exists(self):
+        exists = Profile.objects.filter(user__username="test").exists()
+        self.assertEqual(exists, True)
+```
+
+Para ejecutarlo: 
+```shell
+python manage.py test [nombre_app]
+```
+
+---------------------------------------
+
+## App de Chat/Mensajería con TDD <a name="id15"></a>
+
+- WHO: Un usuario registrado e identificado
+- WHAT: Un chat privado entre el usuario y otros usuarios para comunicarse
+- WHEN: Cuando un usuario decida comunicarse
+- WHERE: EN su sección de Mensajes o a través de un botón de enviar mensaje
+- WHY: Para ofrecer una vía de comunicación
+
+Crear una app con dos modelos:
+
+1. Message
+
+- usuario_emisor (FK_USER)
+- contenido (TEXT)
+- fecha_creación (DateTime)
+
+2. Thread
+- Usuarios (M2M User)
+- Mensajes (M2M Message)
+
+```python
+from django.db import models
+from django.contrib.auth.models import User
+
+class Message(models.Model):
+
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    content = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        verbose_name = ("Mensaje")
+        verbose_name_plural = ("Mensajes")
+
+class Thread(models.Model):
+    users = models.ManyToManyField(User, related_name="threads")
+    messages = models.ManyToManyField(Message)
 ```
