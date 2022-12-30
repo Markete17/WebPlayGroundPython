@@ -29,5 +29,4 @@ def ensure_profile_exists(sender, instance, **kwargs):
     ## Comprobar que solo sea de creación y es la primera vez que se guarda esta intancia
     if kwargs.get('created', False):
         Profile.objects.get_or_create(user=instance)
-        print('Se acaba de crear un usuario y su perfil enlazado')
 

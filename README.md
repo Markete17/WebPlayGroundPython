@@ -1064,7 +1064,7 @@ Ofrecer al usuario tres campos para el usuario: imagen avatar, un texto como bio
 
 Las relaciones entre modelos que existen con Django son:
 - <b>models.OneToOneField: </b> (1:1) -> 1 usuario - 1 perfil
-- <b>models.ForeignKeyField: </b> (1:N) -> 1 usuario - N perfiles
+- <b>models.ForeignKeyField: </b> (N:1 Many To One) -> N usuario - 1 perfiles
 - <b>models.ManyToManyField: </b> (N:N) -> N usuarios - N perfiles
 
 
@@ -1470,7 +1470,7 @@ python manage.py test [nombre_app]
 
 ---------------------------------------
 
-## App de Chat/Mensajería con TDD <a name="id15"></a>
+## App de Chat/Mensajería, TDD, M2M Changed, Model Manager<a name="id15"></a>
 
 - WHO: Un usuario registrado e identificado
 - WHAT: Un chat privado entre el usuario y otros usuarios para comunicarse
@@ -1507,4 +1507,258 @@ class Message(models.Model):
 class Thread(models.Model):
     users = models.ManyToManyField(User, related_name="threads")
     messages = models.ManyToManyField(Message)
+	
+    # Los campos ManyToMany no afectan al updated, se actualizan con la señal
+    updated = models.DateTimeField(auto_now=True)
+```
+
+Para comprobar que un hilo solo pueda aceptar mensajes de usuarios que estén en ese hilo, es necesario crear una señal pre_add con la señal m2m-changed:
+[Información M2M Changed](https://docs.djangoproject.com/en/4.0/ref/signals/#m2m-changed)
+
+
+```python
+
+class Thread(models.Model):
+
+	.............
+
+
+# Señal para hacer que un hilo solo pueda recibir mensajes de usuario que sí estén en el hilo
+def messages_changed(sender, **kwargs):
+    instance = kwargs.pop('instance', None)
+    action = kwargs.pop('action', None)
+    pk_set = kwargs.pop('pk_set', None)
+    print(instance, action, pk_set)
+
+    false_pk_set = set()
+    if action is 'pre_add':
+        for msg_pk in pk_set:
+            msg = Message.objects.get(pk=msg_pk)
+            if msg.user not in instance.users.all():
+                print('El usuario ({}) no forma parte del hilo'.format(msg.user))
+                false_pk_set.add(msg_pk)
+        
+    # Borrar los mensajes que no forman parte del hilo
+    # Metodo conjuntos A-B
+    pk_set.difference_update(false_pk_set)
+	
+	# Forzar para actualizar el update del modelo
+    instance.save()
+
+m2m_changed.connect(messages_changed, sender=Thread.messages.through)
+```
+
+
+TDD se basa primero en hacer primero las pruebas y luego el desarrollo.
+Por lo tanto, se va a crear primero las pruebas en el fichero test.py
+
+
+```python
+from django.test import TestCase
+from django.contrib.auth.models import User
+from .models import Thread, Message
+
+class ThreadTestCase(TestCase):
+    def setUp(self):
+        self.user1 = User.objects.create_user('user1', None, 'test1234')
+        self.user2 = User.objects.create_user('user2', None, 'test1234')
+        self.user3 = User.objects.create_user('user3', None, 'test1234')
+        self.thread = Thread.objects.create()
+    
+    # Comprueba que se añaden los usuarios en el modelo Thread
+    def test_add_users_to_thread(self):
+        self.thread.users.add(self.user1, self.user2)
+        self.assertEqual(len(self.thread.users.all()), 2)
+    
+    # Recuperar un hilo existente a partir de sus usuarios
+    def test_filter_thread_by_users(self):
+        self.thread.users.add(self.user1, self.user2)
+        threads = Thread.objects.filter(users=self.user1).filter(users=self.user2)
+        self.assertEqual(self.thread, threads[0])
+    
+    # Comprobar que no existe un thread si no existe usuario
+    def test_filter_non_existent_thread(self):
+        threads = Thread.objects.filter(users=self.user1).filter(users=self.user2)
+        self.assertEqual(0, len(threads))
+    
+    # Comprobar que se añaden mensajes a los hilos
+    def test_add_messages_to_thread(self):
+        self.thread.users.add(self.user1, self.user2)
+        message1 = Message.objects.create(user=self.user1, content='Buenas')
+        message2 = Message.objects.create(user=self.user2, content='Hola')
+
+        self.thread.messages.add(message1, message2)
+        self.assertEqual(2, len(self.thread.messages.all()))
+    
+    # Comprobar que un usuario no pueda añadir un mensaje al hilo si no pertenece a él
+    def test_add_message_from_user_not_in_thread(self):
+        self.thread.users.add(self.user1, self.user2)
+        message1 = Message.objects.create(user=self.user1, content='Buenas')
+        message2 = Message.objects.create(user=self.user2, content='Hola')
+        message3 = Message.objects.create(user=self.user3, content='Soy Espia')
+        
+        self.thread.messages.add(message1, message2, message3)
+        self.assertEqual(len(self.thread.messages.all()), 2)
+```
+
+
+### Model Manager
+
+[Información Model Manager](https://docs.djangoproject.com/en/4.0/topics/db/managers/)
+
+- Un <b>ModelManager</b> es un manejador de las querys del modelo. Hace que se puedan programar y simplificar las consultas con métodos propios y definidos:
+
+```python
+class ThreadManager(models.Manager):
+    def find(self, *arguments):
+
+        for i, user in enumerate(arguments):
+            if i==0:
+                queryset = self.filter(users=user)
+            else:
+                queryset = queryset.filter(users=user)
+        if len(queryset) > 0:
+            return queryset[0]
+        return None
+
+    def find_or_create(self, *arguments):
+        thread = self.find(*arguments)
+        if thread is None:
+            thread = Thread.objects.create()
+            for user in arguments:
+                thread.users.add(user)
+        return thread
+
+class Thread(models.Model):
+    users = models.ManyToManyField(User, related_name="threads")
+    messages = models.ManyToManyField(Message)
+	
+	# Los campos ManyToMany no afectan al updated, se actualizan con la señal
+    updated = models.DateTimeField(auto_now=True)
+
+    objects = ThreadManager()
+```
+
+Y se podrá usar como función:
+
+```python
+    # Consultas con el ModelManager
+    def test_find_thread_with_custom_manager(self):
+        self.thread.users.add(self.user1, self.user2)
+        thread = Thread.objects.find(self.user1, self.user2)
+        self.assertEqual(self.thread, thread)
+
+    def test_find_or_create_thread_with_custom_manager(self):
+        self.thread.users.add(self.user1, self.user2)
+        thread = Thread.objects.find_or_create(self.user1, self.user2)
+        self.assertEqual(self.thread, thread)
+
+        thread = Thread.objects.find_or_create(self.user1, self.user3)
+        self.assertIsNotNone(thread)
+```
+
+Después crear las vistas para listar los threads del usuario y el detalle de los thread:
+
+```python
+from django.shortcuts import render
+from django.views.generic.base import TemplateView
+from django.views.generic.detail import DetailView
+from django.contrib.auth.decorators import login_required
+from django.utils.decorators import method_decorator
+from .models import Thread
+from django.http import Http404
+
+@method_decorator(login_required, name='dispatch')
+# Create your views here.
+class ThreadListView(TemplateView):
+    template_name = "messenger/thread_list.html"
+
+    """ Filtrar solo los mensajes del usuario conectado
+    No hace falta puesto que se puede usar el related para filtrar en la template
+    
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        return queryset.filter(users=self.request.user)
+    """
+
+class ThreadDetailView(DetailView):
+    model = Thread
+
+    def get_object(self):
+        obj = super().get_object()
+        if self.request.user not in obj.users.all():
+            raise Http404()
+        return obj
+```
+
+
+### Peticiones Asíncronas JS
+
+[Información Peticiones Asíncronas JS](https://docs.hektorprofe.net/django/web-playground/mensajes-asincronos-javascript-1/)
+
+Se crearía un script Javascript y se usaría el método fetch para enviar una petición en la URL:
+
+```html
+	<!-- Aquí crearemos el formulario -->
+	<textarea id="content" class="form-control mb-2" rows="2" placeholder="Escribe tu mensaje aquí"></textarea>
+	<button id="send" type="button" class="btn btn-primary btn-sm btn-block" disabled>Enviar</button>
+	<script>
+		
+	  var send = document.getElementById("send");
+	  send.addEventListener("click", function(){
+		var content = encodeURIComponent(document.getElementById("content").value); // &
+		if (content.length > 0){
+		  const url = "{% url 'messenger:add' thread.pk %}" + "?content="+content;
+		  fetch(url, {'credentials':'include'}).then(response => response.json()).then(function(data){
+			// Si el mensaje se ha creado correctamente...
+			if (data.created) {
+			  var message = document.createElement('div')
+			  message.classList.add('mine','mb-3')
+			  message.innerHTML = '<small><i>Hace unos segunos</i></small><br>'+decodeURIComponent(content)
+			  document.getElementById('thread').appendChild(message)
+			  ScrollBottomInThread()
+			  document.getElementById("content").value = ''
+			  send.disabled = true
+			} else {
+			  // Si algo ha ido mal podemos debugear en la consola del inspector
+			  console.log("Algo ha fallado y el mensaje no se ha podido añadir.")
+			}
+		  })
+		  
+		}
+	  })
+
+	  /* Evento que activa o desactiva el botón dependiendo de si hay*/
+	  var textArea = document.getElementById("content")
+	  textArea.addEventListener("keyup",function(){
+		send.disabled = !this.checkValidity() || !this.value ? true : false
+	  })
+
+	  /* Forzar scroll to bottom*/
+	  function ScrollBottomInThread(){
+		var thread = document.getElementById("thread")
+		thread.scrollTop = thread.scrollHeight
+	  }
+	  ScrollBottomInThread()
+	</script>
+```
+
+Y en la vista sería:
+
+```python
+
+def add_message(request, pk):
+    json_response = {'created':False}
+    if request.user.is_authenticated:
+        content = request.GET.get('content',None)
+        if content:
+            thread = get_object_or_404(Thread, pk=pk)
+            message = Message.objects.create(user=request.user, content=content)
+            thread.messages.add(message)
+            json_response['created'] = True
+    else:
+        raise Http404('User is not authenticated')
+
+    # Convierte Dict a JSON
+    return JsonResponse(json_response)
 ```
