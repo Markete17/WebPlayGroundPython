@@ -39,6 +39,9 @@
               <li class="nav-item {% if request.path|slice:":9" == '/threads/'%}active{% endif %}">
                 <a class="nav-link" href="{% url 'messenger:list' %}">Chat</a>
               </li>
+              <li class="nav-item {% if request.path|slice:":10" == '/policies/'%}active{% endif %}">
+                <a class="nav-link" href="{% url 'policies:policies' %}">Pólizas</a>
+              </li>
             </ul>
             <ul class="navbar-nav">
 

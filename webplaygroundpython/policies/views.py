@@ -1,15 +1,20 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
-from django.views.generic.list import ListView
+
+from django_filters.views import FilterView
+from django.views.generic.detail import DetailView
+from django.views.generic.edit import UpdateView, CreateView, DeleteView
+
 from .models import Policy
 from datetime import datetime
 from .filters import PolicyFilter
-from django_filters.views import FilterView
+from .forms import PolicyForm
+
 
 class PolicyListView(FilterView):
     model = Policy
     template_name = "policies/policies.html"
-    paginate_by = 2
+    paginate_by = 5
     filterset_class = PolicyFilter
 
     def get_context_data(self, **kwargs):
@@ -31,6 +36,27 @@ class PolicyListView(FilterView):
         context.update({'pages': pages})
         return context
 
-    # essentially, mirror get behavior exactly on POST
-    def post(self, *args, **kwargs):
-        return self.get(*args, **kwargs)
+class PolicyDetailView(DetailView):
+    model = Policy
+
+class PolicyUpdateView(UpdateView):
+    model = Policy
+    template_name_suffix = '_update_form'
+    form_class = PolicyForm
+
+    def get_success_url(self):
+        return reverse_lazy('policies:update', args=[self.object.pk]) + '?ok'
+
+class PolicyCreateView(CreateView):
+    model = Policy
+    template_name_suffix = '_create_form'
+    form_class = PolicyForm
+
+    def get_success_url(self):
+        return reverse_lazy('policies:detail', args=[self.object.pk])
+
+class PolicyDeleteView(DeleteView):
+    model = Policy
+
+    def get_success_url(self):
+        return reverse_lazy('policies:policies')

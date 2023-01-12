@@ -1,0 +1,95 @@
+{% extends 'core/base.html' %}
+{% load static %}
+{% block title %}Pólizas{% endblock %}
+
+{% block content %}
+<main role="main">
+    <div class="container">
+        <a href="{{request.META.HTTP_REFERER}}"><i class="fa-solid fa-circle-arrow-left fa-2x"></i></a>
+      <div class="row mt-3 text-center">
+        <div class="col-md-3 mx-auto">
+          <h4 class="section-heading mb-4">Número Póliza</h4>
+          <p>{{policy.policy_code}}</p>
+        </div>
+        <div class="col-md-3 mx-auto">
+            <h4 class="section-heading mb-4">Estado Póliza</h4>
+            <p>{{policy.status.name}}</p>
+        </div>
+        <div class="col-md-3 mx-auto">
+            <h4 class="section-heading mb-4">Titular</h4>
+            <p>{{policy.owner.username}}</p>
+        </div>
+      </div>
+
+      <div class="row mt-3 text-center">
+        <div class="col-md-3 mx-auto">
+            <h4 class="section-heading mb-4">Fecha Alta</h4>
+            {% if policy.created %}
+                <p>{{policy.created|date:"SHORT_DATE_FORMAT"}}</p>
+            {% else %}
+                <p>Sin registro</p>
+            {% endif %}
+        </div>
+        <div class="col-md-3 mx-auto">
+            <h4 class="section-heading mb-4">Fecha Suspensión</h4>
+            {% if policy.suspension_date %}
+                <p>{{policy.suspension_date|date:"SHORT_DATE_FORMAT"}}</p>
+            {% else %}
+                <p>Sin registro</p>
+            {% endif %}
+        </div>
+        <div class="col-md-3 mx-auto">
+            <h4 class="section-heading mb-4">Fecha Anulación</h4>
+            {% if policy.cancellation_date %}
+                <p>{{policy.cancellation_date|date:"SHORT_DATE_FORMAT"}}</p>
+            {% else %}
+                <p>Sin registro</p>
+            {% endif %}
+        </div>
+      </div>
+      <hr>
+      <div>
+        <h4 class="text-center mt-4">Recibos</h4>
+        {% if policy.receipts.all %}
+        <div class="container mb-4">
+            <div class="mt-4">
+                <table class="table table-bordered text-center" style="zoom:70%">
+                    <thead>
+                      <tr>
+                        <th scope="col">Número Recibo</th>
+                        <th scope="col">Fecha Inicio</th>
+                        <th scope="col">Fecha Final</th>
+                        <th scope="col">Fecha Pago</th>
+                        <th scope="col">Fecha Anulación</th>
+                        <th scope="col">Importe</th>
+                        <th scope="col">Estado</th>
+                      </tr>
+                    </thead>
+                    <tbody>            
+                    {% for receipt in policy.receipts.all %}
+                          <tr class="text-center">
+                              <td>{{receipt.receipt_code}}</td>
+                              <td>{{receipt.start_date|date:"SHORT_DATE_FORMAT"}}</td>
+                              <td>{{receipt.end_date|date:"SHORT_DATE_FORMAT"}}</td>
+                              <td>{{receipt.payment_date|date:"SHORT_DATE_FORMAT"}}</td>
+                              <td>{{receipt.cancellation_date|date:"SHORT_DATE_FORMAT"}}</td>
+                              <td>{{receipt.amount}}</td>
+                              <td>{{receipt.status.name}}</td>
+                            </tr>
+                      {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% else %}
+        <p class="text-center">Esta póliza no tiene recibos</p>
+        {% endif %}
+        
+
+
+
+      </div>
+      
+    </div>
+  </main>
+{% endblock content %}

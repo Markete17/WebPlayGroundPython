@@ -4,6 +4,7 @@ from django import forms
 from .models import PolicyStatus
 from django.contrib.auth.models import User
 
+# Django-Filter: https://django-filter.readthedocs.io/en/stable/guide/usage.html#generating-filters-with-meta-fields
 class PolicyFilter(django_filters.FilterSet):
 
     policy_code = django_filters.CharFilter(
