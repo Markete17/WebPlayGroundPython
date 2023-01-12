@@ -19,6 +19,7 @@ from pages.urls import pages_patterns
 from profiles.urls import profiles_patterns
 from django.conf import settings
 from messenger.urls import messenger_patterns
+from policies.urls import policy_patterns
 
 urlpatterns = [
     path('admin/', admin.site.urls),
@@ -27,7 +28,8 @@ urlpatterns = [
     path('accounts/', include('django.contrib.auth.urls')),
     path('accounts/', include('registration.urls')),
     path('profiles/', include(profiles_patterns)),
-    path('threads/', include(messenger_patterns))
+    path('threads/', include(messenger_patterns)),
+    path('policies/', include(policy_patterns))
 ]
 
 if settings.DEBUG:

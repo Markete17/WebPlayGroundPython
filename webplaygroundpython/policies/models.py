@@ -30,11 +30,11 @@ class ReceiptStatus(models.Model):
 class Policy(models.Model):
 
     policy_code = models.CharField(verbose_name="Número Póliza", null=False, blank=False, max_length=250, unique=True)
-    created = models.DateTimeField(auto_now_add=True, verbose_name="Fecha Alta")
+    created = models.DateTimeField(verbose_name="Fecha Alta", default=datetime.datetime.now())
     updated = models.DateTimeField(auto_now=True, verbose_name="Fecha Modificación")
     cancellation_date = models.DateTimeField(verbose_name="Fecha Anulación", null=True)
     suspension_date = models.DateTimeField(verbose_name="Fecha Suspensión", null=True)
-    owner = models.ForeignKey(User, null=False, verbose_name="Titular", on_delete=models.CASCADE, related_query_name="policies")
+    owner = models.ForeignKey(User, null=False, verbose_name="Titular", on_delete=models.CASCADE, related_query_name="policy")
     status = models.ForeignKey(PolicyStatus, on_delete=models.SET_NULL, null=True, verbose_name="Estado Póliza")
 
     class Meta:

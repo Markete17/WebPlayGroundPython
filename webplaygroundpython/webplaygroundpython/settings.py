@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'profiles.apps.ProfilesConfig',
     'messenger.apps.MessengerConfig',
     'policies.apps.PoliciesConfig',
+    'django_filters',
+    'fontawesomefree'
 ]
 
 MIDDLEWARE = [
