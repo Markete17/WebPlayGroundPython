@@ -70,8 +70,40 @@
                     <input class="btn btn-primary btn-block" type="submit" value="Buscar" /><i class="fa-solid fa-magnifying-glass fa-2x ml-2"></i>
                 </div>
             </form>
+            <div class="mt-2 mb-4">
+              <button type="submit" onclick="send_email()" id="email" class="btn btn-primary btn-block">Enviar email</button>
+            </div>
+            <p id="email_text"></p>
         </div>
     </div>
+
+    <script>
+      function send_email(){
+        const policy_code = document.getElementById("id_policy_code").value
+        const id_status = document.getElementById("id_status").value
+        const id_owner = document.getElementById("id_owner").value
+
+        const url = "{% url 'policies:email' %}" + "?policy_code="+policy_code + "&" + "status="+id_status + "&" + "owner="+id_owner ;
+        fetch(url, {'credentials':'include'}).then(response => response.json()).then(function(data){
+        const text = document.getElementById("email_text")
+        
+        if (data.created) {
+            
+            text.innerHTML = 'Correo enviado correctamente'
+            text.className = 'text-success text-center'
+        } else {
+            const text = document.getElementById("email_text")
+            text.innerHTML = 'El correo no se ha podido enviar. Inténtelo más tarde por favor.'
+            text.className = 'text-danger text-center'
+        }
+
+        })
+
+      }
+
+    </script>
+
+
    
     {% if request.GET %}
     <div class="container mb-4">

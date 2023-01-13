@@ -4,12 +4,19 @@ from django.urls import reverse, reverse_lazy
 from django_filters.views import FilterView
 from django.views.generic.detail import DetailView
 from django.views.generic.edit import UpdateView, CreateView, DeleteView
+from django.http import Http404, JsonResponse
 
 from .models import Policy
 from datetime import datetime
 from .filters import PolicyFilter
 from .forms import PolicyForm
 
+import io
+import csv
+from django.core.mail import EmailMessage
+from django.conf import settings
+
+import datetime
 
 class PolicyListView(FilterView):
     model = Policy
@@ -60,3 +67,69 @@ class PolicyDeleteView(DeleteView):
 
     def get_success_url(self):
         return reverse_lazy('policies:policies')
+
+def send_email(request):
+    json_response = {'created':False}
+    # Convierte Dict a JSON
+    policy_code = request.GET.get('policy_code')
+    id_status = request.GET.get('status')
+    id_owner = request.GET.get('owner')
+
+    queryset = Policy.objects.all()
+    if(policy_code):
+        queryset = queryset.filter(policy_code=policy_code)
+    if(id_status):
+        queryset = queryset.filter(status__id=id_status)
+    if(id_owner):
+        queryset = queryset.filter(owner__id=id_owner)
+    
+    csvfile = io.StringIO()
+    csvwriter = csv.writer(csvfile,delimiter=';')
+    csvwriter.writerow([
+        "Numero Poliza", 
+        "Estado Poliza",
+        "Titular",
+        "Fecha Alta",
+        "Fecha Anulacion",
+        "Fecha Suspension",
+    ])
+    for policy in queryset:
+        if(policy.created):
+            created_format = datetime.date.strftime(policy.created, '%m/%d/%Y')
+        else:
+            created_format = ''
+        if(policy.cancellation_date):
+            cancellation_date_format = datetime.date.strftime(policy.cancellation_date, '%m/%d/%Y')
+        else:
+            cancellation_date_format = ''
+        if(policy.suspension_date):
+            suspension_date_format = datetime.date.strftime(policy.suspension_date, '%m/%d/%Y')
+        else:
+            suspension_date_format = ''
+
+        csvwriter.writerow([
+            policy.policy_code, 
+            policy.status.name,
+            policy.owner.username,
+            created_format,
+            cancellation_date_format,
+            suspension_date_format
+        ])
+    email = EmailMessage(
+        subject = 'Polizas',
+        body = 'Aquí le enviamos en un documento adjunto su registro de pólizas seleccionadas.',
+        from_email = settings.EMAIL_HOST_USER,
+        to = ['jiwosip245@v3dev.com'],
+        reply_to = ['jiwosip245@v3dev.com'],
+    )
+
+    email.attach('policies.csv', csvfile.getvalue(), 'text/csv')
+
+    try:
+        email.send()
+        json_response['created'] = True
+        return JsonResponse(json_response)
+    except:
+        return JsonResponse(json_response)
+    
+    

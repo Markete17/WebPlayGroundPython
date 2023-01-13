@@ -50,7 +50,7 @@ class Receipt(models.Model):
     start_date = models.DateField(verbose_name="Fecha Inicio", null=False)
     end_date = models.DateField(verbose_name="Fecha Final", null=False)
     payment_date = models.DateField(verbose_name="Fecha Pago", null=True)
-    cancellation_date = models.DateField(verbose_name="Fecha Cancelación", null=True)
+    cancellation_date = models.DateField(verbose_name="Fecha Anulación", null=True)
     amount = models.DecimalField(verbose_name="Importe", max_digits=50, decimal_places=2)
     policy = models.ForeignKey(Policy, on_delete=models.CASCADE, related_name="receipts")
     status = models.ForeignKey(ReceiptStatus, on_delete=models.SET_NULL, null=True, verbose_name="Estado Recibo")

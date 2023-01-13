@@ -144,7 +144,7 @@ LOGOUT_REDIRECT_URL = 'home'
 import os
 # EMAILS
 if DEBUG:
-    EMAIL_BACKEND = 'django.core.mail.backends.filebased.EmailBackend'
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_FILE_PATH = os.path.join(BASE_DIR, 'sent_emails')
 else:
     # Aquí hay que configurar un email real para producción
@@ -154,3 +154,10 @@ else:
 ## MEDIA SETTINGS
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, "media")
+
+EMAIL_HOST = 'smtp.mailtrap.io'
+EMAIL_HOST_USER = '4cd3d352fa1318'
+EMAIL_HOST_PASSWORD = 'b298bd73d4cb09'
+EMAIL_PORT = '2525'
+EMAIL_USE_TLS = True
+EMAIL_USE_SSL = False
