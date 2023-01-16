@@ -18,6 +18,7 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 13. [Señales](#id13)
 14. [Pruebas unitarias Django](#id14)
 15. [App de mensajería con TDD](#id15)
+16. [Django MySQL](#id16)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -1762,3 +1763,72 @@ def add_message(request, pk):
     # Convierte Dict a JSON
     return JsonResponse(json_response)
 ```
+
+## Django MYSQL <a name="id16"></a>
+
+1. Instalar MySQL 
+
+[Instalar MYSQL](https://dev.mysql.com/downloads/installer/)
+
+Instalando MySQL Workbench y MySQL Server
+
+2. Crear base de datos y super usuario
+
+```sql:
+CREATE DATABASE nombreDB
+
+CREATE USER nombreusuario@localhost IDENTIFIED BY 'pass';
+GRANT ALL PRIVILEGES ON nombreDB.* TO nombreusuario@localhost;
+FLUSH PRIVILEGES;
+```
+
+3. Instalar SQL en Django
+
+Ejecutar: <b>pip install pymysql</b> en el entorno virtual
+
+4. Importar pymysql en settings.py
+
+5. Configuración
+
+En __init__py, a la altura de settings.py, agregar lo siguiente para iniciar la base de datos MySQL:
+
+```python:
+import pymysql
+pymysql.install_as_MySQLdb()
+```
+
+6. Editar settings.py
+
+Eliminar la Database de desarrollo y añadir la de MySQL poniendo lo siguiente:
+
+```python:
+# Database
+# https://docs.djangoproject.com/en/4.1/ref/settings/#databases
+
+
+
+"""
+ELIMINAR
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}"""
+
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'db_webplaygroundpython',
+            'USER': 'marcos',
+            'PASSWORD': '1234',
+            'HOST': 'localhost',
+            'PORT': '3306',
+        }
+    }
+```
+
+7. Hacer las migraciones
+
+Ejecutar <b>python manage.py makemigrations</b> y <b>python manage.py migrate</b>
