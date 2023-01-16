@@ -1775,7 +1775,7 @@ Instalando MySQL Workbench y MySQL Server
 
 2. Crear base de datos y super usuario
 
-```sql:
+```sql
 CREATE DATABASE nombreDB
 
 CREATE USER nombreusuario@localhost IDENTIFIED BY 'pass';
@@ -1793,7 +1793,7 @@ Ejecutar: <b>pip install pymysql</b> en el entorno virtual
 
 En __init__py, a la altura de settings.py, agregar lo siguiente para iniciar la base de datos MySQL:
 
-```python:
+```python
 import pymysql
 pymysql.install_as_MySQLdb()
 ```
@@ -1846,7 +1846,7 @@ Primero, ejecutar <b>pip install gunicorn</b> y ponerlo en el archivo <b>setting
 Después, el el directorio raíz añadir una carpeta config/gunicorn y crear el archivo <b>conf.py</b>
 Este archivo tendrá lo siguiente:
 
-```python:
+```python
 name = 'webplaygroundpython'
 loglevel = 'info'
 errorlog = '-'
@@ -1858,7 +1858,7 @@ workers = 2
 
 En la carpeta config creada anteriormente, añadir las carpetas config/nginx/conf.d que dentro tendrá el archivo <b>local.conf</b> con la siguiente configuración:
 
-```conf:
+```conf
 upstream django_server {
     server localhost:8000;
 }
@@ -1882,7 +1882,7 @@ server {
 
 Es necesario que en el <b>settings.py</b> estén configurados los archivos estáticos con la siguiente dirección:
 
-```python:
+```python
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
@@ -1896,7 +1896,7 @@ STATIC_ROOT = 'code/static/'
 El archivo DockerFile sirve para crear una nueva imagen que tendrá todo lo necesario para ejecutar el proyecto python. Es necesario tener todas las dependecias en <b>requirements.txt</b> (con ese nombre). Esta imagen luego será utilizada por el contenedor en el docker-compose.yml
 El archivo DockerFile tiene que estar a la altura del manage.pu tendrá lo siguiente:
 
-```dockerfile:
+```dockerfile
 FROM python:3.10.8
 
 ENV PYTHONUNBUFFERED 1
@@ -1914,7 +1914,7 @@ Se ejecutará el fichero requirements.txt con todas las dependencias necesarias.
 
 Teniendo en cuenta las imágenes mysql y nginx de Docker y la imagen que se ha creado en el DockerFile, ya se puede construir el docker-compose.yml (a la misma altura que el DockerFile)
 
-```yml:
+```yml
 version: '3'
 
 services:
