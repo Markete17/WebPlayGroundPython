@@ -1802,7 +1802,7 @@ pymysql.install_as_MySQLdb()
 
 Eliminar la Database de desarrollo y añadir la de MySQL poniendo lo siguiente:
 
-```python:
+```python
 # Database
 # https://docs.djangoproject.com/en/4.1/ref/settings/#databases
 
