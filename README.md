@@ -19,6 +19,7 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 14. [Pruebas unitarias Django](#id14)
 15. [App de mensajería con TDD](#id15)
 16. [Django MySQL](#id16)
+17. [Django Deploy: Ngnix, Gunicorn y Docker](#id17)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -1832,3 +1833,133 @@ DATABASES = {
 7. Hacer las migraciones
 
 Ejecutar <b>python manage.py makemigrations</b> y <b>python manage.py migrate</b>
+
+## Django Deploy: Ngnix, Gunicorn y Docker<a name="id17"></a>
+
+1. Tener instalado Docker
+
+[Descargar Docker](https://www.docker.com/get-started/)
+
+2. Configurar Gunicorn
+
+Primero, ejecutar <b>pip install gunicorn</b> y ponerlo en el archivo <b>settings.py</b>
+Después, el el directorio raíz añadir una carpeta config/gunicorn y crear el archivo <b>conf.py</b>
+Este archivo tendrá lo siguiente:
+
+```python:
+name = 'webplaygroundpython'
+loglevel = 'info'
+errorlog = '-'
+accesslog = '-'
+workers = 2
+```
+
+3. Configurar Nginx
+
+En la carpeta config creada anteriormente, añadir las carpetas config/nginx/conf.d que dentro tendrá el archivo <b>local.conf</b> con la siguiente configuración:
+
+```conf:
+upstream django_server {
+    server localhost:8000;
+}
+
+server {
+    listen 80;
+    server_name localhost;
+
+    location /static/ {
+        alias /code/static/;
+    }
+
+    location / {
+        proxy_pass http://django_server;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header Host $host;
+        proxy_redirect off;
+    }
+}
+```
+
+Es necesario que en el <b>settings.py</b> estén configurados los archivos estáticos con la siguiente dirección:
+
+```python:
+# Static files (CSS, JavaScript, Images)
+# https://docs.djangoproject.com/en/4.1/howto/static-files/
+
+STATIC_URL = 'static/'
+STATIC_ROOT = 'code/static/'
+
+```
+
+4. Crear el DockerFile
+
+El archivo DockerFile sirve para crear una nueva imagen que tendrá todo lo necesario para ejecutar el proyecto python. Es necesario tener todas las dependecias en <b>requirements.txt</b> (con ese nombre). Esta imagen luego será utilizada por el contenedor en el docker-compose.yml
+El archivo DockerFile tiene que estar a la altura del manage.pu tendrá lo siguiente:
+
+```dockerfile:
+FROM python:3.10.8
+
+ENV PYTHONUNBUFFERED 1
+RUN mkdir /code
+WORKDIR /code
+ADD requirements.txt /code/
+RUN pip install -r requirements.txt
+ADD . /code/
+```
+
+De esta manera los archivos estáticos necesarios para la app estarán en /code/code
+Se ejecutará el fichero requirements.txt con todas las dependencias necesarias.
+
+5. Crear el docker-compose
+
+Teniendo en cuenta las imágenes mysql y nginx de Docker y la imagen que se ha creado en el DockerFile, ya se puede construir el docker-compose.yml (a la misma altura que el DockerFile)
+
+```yml:
+version: '3'
+
+services:
+  db:
+    image: mysql:5.7
+    ports:
+      - '3306:3306'
+    environment:
+       MYSQL_DATABASE: 'db_webplaygroundpython'
+       MYSQL_USER: 'marcos'
+       MYSQL_PASSWORD: '1234'
+       MYSQL_ROOT_PASSWORD: '1234'
+  web:
+    build: .
+    command: python manage.py runserver 0.0.0.0:8000
+    volumes:
+      - .:/code
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+
+  nginx:
+    image: nginx:1.13
+    ports:
+      - 8001:81
+    volumes:
+      - ./config/nginx/conf.d:/etc/nginx/conf.d
+      - static:/code/static
+    depends_on:
+      - web
+
+volumes:
+  .:
+  static:
+```
+
+6. Construir el contenedor
+
+Ejecutar <b>docker compose build</b> y posteriormente levantar el contenedor con <b>docker compose up</b>
+
+7. Shell de Docker
+
+- Para ver las carpetas del contenedor y como están almacenados los archivos, se puede acceder con el comando: <b>docker exec -it <mycontainer> bash</b>
+- Para ver la lista de contenedores: <b>docker container ls</b>
+- Ver las imagenes en ejecución: <b>docker ps</b>
+
+8. Ya esta desplegado y se puede acceder al localhost:8000
