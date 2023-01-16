@@ -25,7 +25,7 @@ SECRET_KEY = 'django-insecure-07ubt_8jt%3r5b7@88pd83_pe_w$^fst^)p^@c=+2!v+2s$+h@
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = ['*']
 
 
 # Application definition
@@ -47,7 +47,8 @@ INSTALLED_APPS = [
     'policies.apps.PoliciesConfig',
     'django_filters',
     'fontawesomefree',
-    'pymysql'
+    'pymysql',
+    'gunicorn'
 ]
 
 MIDDLEWARE = [
@@ -96,7 +97,7 @@ DATABASES = {
             'NAME': 'db_webplaygroundpython',
             'USER': 'marcos',
             'PASSWORD': '1234',
-            'HOST': 'localhost',
+            'HOST': 'db',
             'PORT': '3306',
         }
     }
@@ -137,6 +138,7 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/4.1/howto/static-files/
 
 STATIC_URL = 'static/'
+STATIC_ROOT = 'code/static/'
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
