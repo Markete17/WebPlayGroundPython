@@ -1,0 +1,35 @@
+{% extends "easy_pdf/base.html" %}
+{% block extra_style %}
+   <meta http-equiv="content-type" content="text/html; charset=utf-8"> 
+{% endblock %}
+{% block content %}
+
+    <div id="content">
+        <h1 class="text-center">Policies</h1>
+        <table class="table table-bordered text-center" style="zoom:70%">
+            <thead>
+              <tr>
+                <th scope="col">Número Póliza</th>
+                <th scope="col">Estado Póliza</th>
+                <th scope="col">Titular</th>
+                <th scope="col">Fecha Alta</th>
+                <th scope="col">Fecha Anulación</th>
+                <th scope="col">Fecha Suspensión</th>
+              </tr>
+            </thead>
+            <tbody>            
+              {% for policy in policies %}
+                  <tr class="text-center">
+                      <td>{{policy.policy_code}}</td>
+                      <td>{{policy.status.name}}</td>
+                      <td>{{policy.owner.username}}</td>
+                      <td>{{policy.created|date:"SHORT_DATE_FORMAT" }}</td>
+                      <td>{{policy.cancellation_date|date:"SHORT_DATE_FORMAT" }}</td>
+                      <td>{{policy.suspension_date|date:"SHORT_DATE_FORMAT" }}</td>
+                    </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+
+    </div>
+{% endblock %}

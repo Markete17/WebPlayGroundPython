@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect
 from django.urls import reverse, reverse_lazy
+from easy_pdf.rendering import render_to_pdf
 
 from django_filters.views import FilterView
 from django.views.generic.detail import DetailView
@@ -123,7 +124,15 @@ def send_email(request):
         reply_to = ['jiwosip245@v3dev.com'],
     )
 
+    policies_pdf = render_to_pdf(
+        'policies/policiesPDF.html',
+        {'policies': queryset},
+    )
+
     email.attach('policies.csv', csvfile.getvalue(), 'text/csv')
+
+    # https://pypi.org/project/django-easy-pdf3/
+    email.attach('policies.pdf',policies_pdf, 'application/pdf')
 
     try:
         email.send()
@@ -131,5 +140,3 @@ def send_email(request):
         return JsonResponse(json_response)
     except:
         return JsonResponse(json_response)
-    
-    

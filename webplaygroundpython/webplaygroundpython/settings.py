@@ -31,6 +31,7 @@ ALLOWED_HOSTS = []
 # Application definition
 
 INSTALLED_APPS = [
+    'easy_pdf',
     'registration.apps.RegistrationConfig',
     'django.contrib.admin',
     'django.contrib.auth',
@@ -45,7 +46,7 @@ INSTALLED_APPS = [
     'messenger.apps.MessengerConfig',
     'policies.apps.PoliciesConfig',
     'django_filters',
-    'fontawesomefree'
+    'fontawesomefree',
 ]
 
 MIDDLEWARE = [
