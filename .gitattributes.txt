@@ -1,1 +1,1 @@
-*.js linguist-detectable=false
+webplaygroundpython/code/static/* linguist-vendored
