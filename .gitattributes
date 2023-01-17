@@ -1,5 +1,3 @@
-*.js linguist-detectable=true
-*.html linguist-detectable=true
-*.css linguist-detectable=true
-
-webplaygroundpython/code/static/* linguist-vendored
+*.js linguist-detectable=false
+*.html linguist-detectable=false
+*.css linguist-detectable=false
