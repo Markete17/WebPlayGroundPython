@@ -20,7 +20,8 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 15. [App de mensajería con TDD](#id15)
 16. [Django MySQL](#id16)
 17. [Django Deploy: Ngnix, Gunicorn y Docker](#id17)
-18. [Despliegue](#id17)
+18. [Despliegue](#id18)
+19. [Anexos](#id19)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -1837,6 +1838,8 @@ Ejecutar <b>python manage.py makemigrations</b> y <b>python manage.py migrate</b
 
 ## Django Deploy: Ngnix, Gunicorn y Docker<a name="id17"></a>
 
+- [Django en Ubuntu Server con Nginx, Gunicorn y Supervisor](https://docs.hektorprofe.net/academia/django/tutoriales/#django-en-ubuntu-server-con-nginx-gunicorn-y-supervisor)
+
 1. Tener instalado Docker
 
 [Descargar Docker](https://www.docker.com/get-started/)
@@ -2017,3 +2020,34 @@ application = get_wsgi_application()
 
 9. Añadir las rutas static.
 Para ello es necesario haber hecho el python manage.py collectstatic para que estén en una carpeta
+
+## Anexos<a name="id19"></a>
+
+### Enlaces para desplegar
+
+- [Ubuntu 16.04](https://platzi.com/blog/llevar-django-a-produccion/)  (en español)
+
+- [Heroku](https://devcenter.heroku.com/articles/deploying-python) (en inglés)
+
+- [Amazon WS](https://realpython.com/deploying-a-django-app-and-postgresql-to-aws-elastic-beanstalk/) (en inglés)
+
+- [Docker](https://blog.carlosmart.co/django-docker-configuration/) (en español)
+
+- [Windows Server 2012](http://blog.mattwoodward.com/2016/07/running-django-application-on-windows.html) (en inglés)
+
+### Tutoriales sobre Django
+
+- [Utilizar Django en entornos virtuales con Pipenv](https://docs.hektorprofe.net/academia/django/tutoriales/#utilizar-django-en-entornos-virtuales-con-pipenv) 
+
+- [Colorear sintaxis y autocompletar en Visual Studio Code](https://docs.hektorprofe.net/academia/django/tutoriales/#colorear-sintaxis-y-autocompletar-en-visual-studio-code)
+
+- [Filtrar un modelo por un campo utilizando un formulario](https://docs.hektorprofe.net/academia/django/tutoriales/#filtrar-un-modelo-por-un-campo-utilizando-un-formulario)
+
+- [Crear, editar y borrar instancias con formularios](https://docs.hektorprofe.net/academia/django/tutoriales/#crear-editar-y-borrar-instancias-de-modelos-con-formularios)
+
+- [Mostrar gráficos generados con Matplotlib en Django](https://docs.hektorprofe.net/academia/django/tutoriales/#mostrar-graficos-generados-con-matplotlib-en-django)
+
+- [Implementar sistema clásico de registro, login y logout](https://docs.hektorprofe.net/academia/django/tutoriales/#implementar-sistema-clasico-de-registro-login-y-logout)
+- [Extender el UserCreationForm para registrarse con el email](https://docs.hektorprofe.net/academia/django/tutoriales/#extender-el-usercreationform-para-registrarse-con-el-email)
+
+- [Django en Ubuntu Server con Nginx, Gunicorn y Supervisor](https://docs.hektorprofe.net/academia/django/tutoriales/#django-en-ubuntu-server-con-nginx-gunicorn-y-supervisor)
