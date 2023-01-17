@@ -1,1 +1,1 @@
-webplaygroundpython/code/static/* linguist-vendored
+*/webplaygroundpython/code/static/* linguist-vendored
