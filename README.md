@@ -20,6 +20,7 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 15. [App de mensajería con TDD](#id15)
 16. [Django MySQL](#id16)
 17. [Django Deploy: Ngnix, Gunicorn y Docker](#id17)
+18. [Despliegue](#id17)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -1963,3 +1964,56 @@ Ejecutar <b>docker compose build</b> y posteriormente levantar el contenedor con
 - Ver las imagenes en ejecución: <b>docker ps</b>
 
 8. Ya esta desplegado y se puede acceder al localhost:8000
+
+## Despliegue<a name="id18"></a>
+
+1. Entrar en [PythonAnyWhere](https://www.pythonanywhere.com)
+2. Dentro de la página abrir una nueva consola bash y crear un nuevo entorno virtual
+
+<b>mkvirtualenv --python=3.8 [nombre entorno virtual]</b>
+
+- Para desactivar el entorno virtual -> <b>deactivate</b>
+- Para activar el entorno virtual -> <b>~/.virtualenvs/[nombre entorno virtual]/bin/activate</b>
+
+3. Descargar las dependencias. Para ello clonar el repositorio con git clone, acceder a la carpeta donde esté en requirements.txt y ejecutar <b>pip install -r requirements.txt</b>
+
+4. En la consola, hacer un <b>python manage.py check --deploy</b> e indicará unos warnings y configuraciones que habrá que establecer. De todas estas hay dos importantes:
+
+- Establecer el DEBUG a False en el settings.py: DEBUG = False
+- Allowed HOST no puede estar en empty
+```bash
+ALLOWED_HOSTS = ['webplaygroundpython.pythonanywhere.com','localhost','127.0.0.1']
+```
+
+Todo estoy se haría dentro de PythonAnyWhere, en la sección Files y buscar el settings.py
+
+5. Ir a web y crear una nueva app con la opción Manual Configuration
+6. Abajo en la sección Code hay que rellenar el source code. Para ello, ir a la consola y ejecutar pwd para ver el directorio donde está el código (la carpeta que contiene el manage.py)
+7. Configurar el VirtualEnv: para esto, ir a la consola y escribir which python para que muestre la ruta al entorno virtual (quitar las dos últimas barras)
+8. En la sección Code, ir al WSGI y editar el fichero que aparece para dejarlo vacío y poner lo siguiente:
+
+```python
+import os
+import sys
+
+
+## assuming your django settings file is at '/home/marcosruiz/mysite/mysite/settings.py'
+## /home/marcosruiz/WebPlayGroundPython/webplaygroundpython/webplaygroundpython
+
+## and your manage.py is is at '/home/marcosruiz/mysite/manage.py'
+
+# /home/marcosruiz/WebPlayGroundPython/webplaygroundpython
+
+
+path = '/home/marcosruiz/WebPlayGroundPython/webplaygroundpython'
+if path not in sys.path:
+    sys.path.append(path)
+
+os.environ['DJANGO_SETTINGS_MODULE'] = 'webplaygroundpython.settings'
+
+from django.core.wsgi import get_wsgi_application
+application = get_wsgi_application()
+```
+
+9. Añadir las rutas static.
+Para ello es necesario haber hecho el python manage.py collectstatic para que estén en una carpeta
