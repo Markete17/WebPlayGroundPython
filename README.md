@@ -1840,9 +1840,10 @@ Ejecutar <b>python manage.py makemigrations</b> y <b>python manage.py migrate</b
 
 - [Django en Ubuntu Server con Nginx, Gunicorn y Supervisor](https://docs.hektorprofe.net/academia/django/tutoriales/#django-en-ubuntu-server-con-nginx-gunicorn-y-supervisor)
 
-1. Tener instalado Docker
+1. Tener instalado Docker y WSL en windows
 
-[Descargar Docker](https://www.docker.com/get-started/)
+- [Descargar Docker](https://www.docker.com/get-started/)
+- Abrir el CMD y escribir: <b>wsl --update</b> para instalar el paquete de linux en windows que es necesario para que Docker Desktop se ejecute.
 
 2. Configurar Gunicorn
 
