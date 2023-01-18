@@ -1,5 +1,6 @@
 # WebPlayGroundPython
 
+Aplicación web backend Python Django con MySQL, Docker, Nginx y Gunicorn.
 Toda la información en: [Información](https://docs.hektorprofe.net/django/web-playground/)
 
 Enlaces a los otros proyectos de Django:
