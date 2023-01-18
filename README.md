@@ -1957,11 +1957,36 @@ volumes:
   static:
 ```
 
+Y en el settings.py:
+
+```python
+DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.mysql',
+            'NAME': 'db_webplaygroundpython',
+            'USER': 'marcos',
+            'PASSWORD': '1234',
+            'HOST': 'db',
+            'PORT': '3306',
+        }
+    }
+```
+
 6. Construir el contenedor
 
 Ejecutar <b>docker compose build</b> y posteriormente levantar el contenedor con <b>docker compose up</b>
 
-7. Shell de Docker
+7. Migrar las tablas de la base de datos de docker y crear superuser
+
+```bash
+$ docker-compose run --rm web python manage.py makemigrations
+
+$ docker-compose run --rm web python manage.py migrate
+
+$ docker-compose run --rm web python manage.py createsuperuser
+```
+
+8. Shell de Docker
 
 - Para ver las carpetas del contenedor y como están almacenados los archivos, se puede acceder con el comando: <b>docker exec -it [mycontainer_name] bash</b>
 - Para ver la lista de contenedores: <b>docker container ls</b>
