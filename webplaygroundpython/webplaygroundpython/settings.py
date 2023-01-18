@@ -11,7 +11,7 @@ https://docs.djangoproject.com/en/4.1/ref/settings/
 """
 
 from pathlib import Path
-
+import os
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -66,7 +66,7 @@ ROOT_URLCONF = 'webplaygroundpython.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates/')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -97,7 +97,7 @@ DATABASES = {
             'NAME': 'db_webplaygroundpython',
             'USER': 'marcos',
             'PASSWORD': '1234',
-            'HOST': 'db',
+            'HOST': 'db', # Docker -> db # Sin Docker -> localhost o ''
             'PORT': '3306',
         }
     }
@@ -139,6 +139,9 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 STATIC_ROOT = 'code/static/'
+STATICFILES_DIRS = [
+    os.path.join(BASE_DIR,"static"),
+]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/4.1/ref/settings/#default-auto-field
@@ -155,7 +158,6 @@ CKEDITOR_CONFIGS = {
 # LOGIN_REDIRECT_URL = 'home'
 LOGOUT_REDIRECT_URL = 'home'
 
-import os
 # EMAILS
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

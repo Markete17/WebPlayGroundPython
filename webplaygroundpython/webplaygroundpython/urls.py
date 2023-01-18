@@ -35,3 +35,8 @@ urlpatterns = [
 if settings.DEBUG:
     from django.conf.urls.static import static #static que permite servir ficheros estáticos
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+# Custom titles for admin
+admin.site.site_header = 'WebPlayGroundPython'
+admin.site.index_title = 'Panel de Administrador'
+admin.site.site_title = 'WebPlayGroundPython'

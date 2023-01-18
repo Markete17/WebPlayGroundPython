@@ -19,9 +19,10 @@ Toda la información en: [Información](https://docs.hektorprofe.net/django/web-
 14. [Pruebas unitarias Django](#id14)
 15. [App de mensajería con TDD](#id15)
 16. [Django MySQL](#id16)
-17. [Django Deploy: Ngnix, Gunicorn y Docker](#id17)
-18. [Despliegue](#id18)
-19. [Anexos](#id19)
+17. [Django Docker con Ngnix y Gunicorn](#id17)
+18. [Cambiar icono y nombres del Django Administrador](#id18)
+19. [Despliegue](#id19)
+20. [Anexos](#id20)
 
 
 ## Vistas como objetos en vez de como funciones<a name="id1"></a>
@@ -1836,7 +1837,7 @@ DATABASES = {
 
 Ejecutar <b>python manage.py makemigrations</b> y <b>python manage.py migrate</b>
 
-## Django Deploy: Ngnix, Gunicorn y Docker<a name="id17"></a>
+## Django Docker con Ngnix y Gunicorn<a name="id17"></a>
 
 - [Django en Ubuntu Server con Nginx, Gunicorn y Supervisor](https://docs.hektorprofe.net/academia/django/tutoriales/#django-en-ubuntu-server-con-nginx-gunicorn-y-supervisor)
 
@@ -1994,7 +1995,112 @@ $ docker-compose run --rm web python manage.py createsuperuser
 
 8. Ya esta desplegado y se puede acceder al localhost:8000
 
-## Despliegue<a name="id18"></a>
+## Cambiar icono y nombres del Django Administrador<a name="id19"></a>
+
+1. Dirigirse al fichero <b>urls.py</b> global del proyecto y editar los 3 parámetros:
+
+- admin.site.site_header: para el header
+- admin.site.index_title: para el  subtitulo
+- admin.site.site_title: para el nombre de la pestaña navegador
+
+```python
+# Custom titles for admin
+admin.site.site_header = 'WebPlayGroundPython'
+admin.site.index_title = 'Panel de Administrador'
+admin.site.site_title = 'WebPlayGroundPython'
+```
+
+2. Editar el icono
+
+Para editar el icono se tienen que sobrescribir los templates del Django Administrator.
+
+Al nivel de todas las apps, crear dos carpetas templates/admin
+
+Todos los templates del administrador están en la siguiente dirección: ..\.virtualenvs\webplaygroundpython-Y9QeOmHs\Lib\site-packages\django\contrib\admin\templates\admin
+
+El archivo html que hay que sobrescribir es el de base_site.html que se encuentra en templates/admin
+
+Antes de nada crear una carpeta static al mismo nivel que la anterior de templates. En esta carpeta static se almacenará el logo del administrador.
+Entonces, hay que copiar el base_site.html y pegarlo en la carpeta que se ha creado. Y aquí sobrescribir el código añadiendo una imagen:
+
+
+```html
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}
+        <img src="{% static 'logo.jpg' %}" height="40px"/>
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+
+```
+
+Para cambiar el fondo, es necesario ir a inspeccionar elementos html y sobrescribir los estilos en el bloque que ya este predefinido en esta template llamado
+block extrastyle. Y dentro de la etiqueta style sobrescribir las clases css.
+
+```html
+{% extends "admin/base.html" %}
+{% load static %}
+{% block title %}{% if subtitle %}{{ subtitle }} | {% endif %}{{ title }} | {{ site_title|default:_('Django site admin') }}{% endblock %}
+
+{% block extrastyle %}
+<style>
+    #header {background: black} 
+    .module h2, .module caption, .inline-group h2 {
+        margin: 0;
+        padding: 8px;
+        font-weight: 400;
+        font-size: 0.8125rem;
+        text-align: left;
+        background: black;
+        color: var(--header-link-color);
+    }
+
+</style>
+{% endblock extrastyle %}
+
+{% block branding %}
+<h1 id="site-name">
+    <a href="{% url 'admin:index' %}">{{ site_header|default:_('Django administration') }}
+        <img src="{% static 'logo.jpg' %}" height="40px"/>
+    </a>
+</h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
+
+```
+
+
+En el <b>settings.py</b> cambiar los DIRS de los templates:
+
+```python
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [os.path.join(BASE_DIR, 'templates/')],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+```
+
+
+
+## Despliegue<a name="id19"></a>
 
 1. Entrar en [PythonAnyWhere](https://www.pythonanywhere.com)
 2. Dentro de la página abrir una nueva consola bash y crear un nuevo entorno virtual
@@ -2047,7 +2153,7 @@ application = get_wsgi_application()
 9. Añadir las rutas static.
 Para ello es necesario haber hecho el python manage.py collectstatic para que estén en una carpeta
 
-## Anexos<a name="id19"></a>
+## Anexos<a name="id20"></a>
 
 ### Enlaces para desplegar
 
