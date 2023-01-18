@@ -1958,7 +1958,7 @@ volumes:
   static:
 ```
 
-Y en el settings.py:
+- Debido a que docker generará un host db (nombre puesto en el docker-compose.yml) con la base de datos en la carpeta del directorio, es necesario indicar el nombre del host de la base de datos en el <b>settings.py:</b>
 
 ```python
 DATABASES = {
@@ -1995,7 +1995,7 @@ $ docker-compose run --rm web python manage.py createsuperuser
 
 8. Ya esta desplegado y se puede acceder al localhost:8000
 
-## Cambiar icono y nombres del Django Administrador<a name="id19"></a>
+## Cambiar icono y nombres del Django Administrador<a name="id18"></a>
 
 1. Dirigirse al fichero <b>urls.py</b> global del proyecto y editar los 3 parámetros:
 
