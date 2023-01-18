@@ -2,6 +2,10 @@
 
 Toda la información en: [Información](https://docs.hektorprofe.net/django/web-playground/)
 
+Enlaces a los otros proyectos de Django:
+- [Web personal](https://github.com/Markete17/PersonalWebPython): Django básico: uso del entorno virtual pipenv, uso de vistas y templatetags
+- [Web empresarial](https://github.com/Markete17/BusinessWebPython): Django intermedio
+
 **Índice**   
 1. [TemplateView: Vistas como objetos en vez de como funciones](#id1)
 2. [ListView y Paginación](#id2)
