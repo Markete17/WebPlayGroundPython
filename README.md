@@ -1963,7 +1963,7 @@ Ejecutar <b>docker compose build</b> y posteriormente levantar el contenedor con
 
 7. Shell de Docker
 
-- Para ver las carpetas del contenedor y como están almacenados los archivos, se puede acceder con el comando: <b>docker exec -it <mycontainer> bash</b>
+- Para ver las carpetas del contenedor y como están almacenados los archivos, se puede acceder con el comando: <b>docker exec -it [mycontainer_name] bash</b>
 - Para ver la lista de contenedores: <b>docker container ls</b>
 - Ver las imagenes en ejecución: <b>docker ps</b>
 
