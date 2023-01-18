@@ -97,7 +97,7 @@ DATABASES = {
             'NAME': 'db_webplaygroundpython',
             'USER': 'marcos',
             'PASSWORD': '1234',
-            'HOST': '',
+            'HOST': 'db',
             'PORT': '3306',
         }
     }
